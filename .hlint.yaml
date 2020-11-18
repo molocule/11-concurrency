@@ -1,0 +1,19 @@
+
+- functions:
+  - {name: head, within: []} # head can only appear in no modules
+  - {name: tail, within: []} 
+  - {name: Maybe.fromJust, within: []} 
+
+- ignore: {name: "Use head"}
+- ignore: {name: "Use mapM"}
+- ignore: {name: "Use first"}
+- ignore: {name: "Use newtype instead of data"}
+- ignore: {name: "Avoid lambda"}
+- ignore: {name: "Use <$>"}
+- ignore: {name: "Use $>"}
+- ignore: {name: "Use concatMap" }
+- ignore: {name: "Replace case with maybe" }
+- ignore: {name: "Move guards forward" }
+- ignore: {name: "Use fmap" }
+- ignore: {name: "Redundant lambda"}
+- ignore: {name: "Use lambda-case" }

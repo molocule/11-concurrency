@@ -1,0 +1,21 @@
+cabal-version:       >=1.10
+
+name:                cis552-concurrency
+version:             0.1.0.0
+license-file:        LICENSE
+maintainer:          sweirich@cis.upenn.edu
+build-type:          Simple
+extra-source-files:  CHANGELOG.md
+
+
+library
+  exposed-modules:     Concurrency
+                     , Client
+                     , TransC      
+  build-depends:       base >=4.13 && <4.14
+                     , HUnit >= 1.6.0.0
+                     , network
+                     , mtl
+                     , containers
+  default-language:    Haskell2010
+  ghc-options:       -Wno-unused-matches

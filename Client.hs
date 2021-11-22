@@ -1,4 +1,19 @@
+{-
+---
+fulltitle: Concurrency client
+---
+
+This module goes with the [Concurrency](Concurrency.html) lecture. It
+implements a network client that communicates with a server using sockets.
+-}
+
 module Client (local, client, send) where
+
+{-
+This module uses the
+[Network.Socket](https://hackage.haskell.org/package/network-2.6.2.1/docs/Network-Socket.html)
+library, which provides basically the same interface to OS sockets as in C.
+-}
 
 import Network.Socket hiding (send)
 import System.IO

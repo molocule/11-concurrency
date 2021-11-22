@@ -1,19 +1,20 @@
+# AUTO GENERATED HLINT FILE
 
 - functions:
-  - {name: head, within: []} # head can only appear in no modules
-  - {name: tail, within: []} 
-  - {name: Maybe.fromJust, within: []} 
+  - {name: head, within: []}
+  - {name: tail, within: []}
+  - {name: (!!), within: []}
+  - {name: read, within: []}
+  - {name: maximum, within: []}
+  - {name: minimum, within: []}
+  - {name: (Data.Map.!), within: []}
+  - {name: Data.Maybe.fromJust, within: []}
 
+- ignore: {name: "Replace case with fromMaybe"}
+- ignore: {name: "Use >=>"}
+- ignore: {name: "Use asum"}
+- ignore: {name: "Use Control.Monad.void"}
 - ignore: {name: "Use head"}
-- ignore: {name: "Use mapM"}
-- ignore: {name: "Use first"}
-- ignore: {name: "Use newtype instead of data"}
-- ignore: {name: "Avoid lambda"}
-- ignore: {name: "Use <$>"}
-- ignore: {name: "Use $>"}
-- ignore: {name: "Use concatMap" }
-- ignore: {name: "Replace case with maybe" }
-- ignore: {name: "Move guards forward" }
-- ignore: {name: "Use fmap" }
+- ignore: {name: "Use minimum"}
+- ignore: {name: "Unused LANGUAGE pragma"}
 - ignore: {name: "Redundant lambda"}
-- ignore: {name: "Use lambda-case" }

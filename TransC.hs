@@ -1,6 +1,7 @@
 {-
 ---
 fulltitle: "In class exercise: Concurrency Monad Transformer"
+date: December 1, 2021
 ---
 -}
 {-# LANGUAGE FlexibleInstances #-}
@@ -25,7 +26,7 @@ import qualified System.IO as IO
 Note, today is all about testing.
 -}
 
-import Test.HUnit hiding (State)
+import Test.HUnit (Test, runTestTT, (~?=))
 
 {-
 Testing IO interactions
@@ -97,9 +98,11 @@ data FakeState = FS
 {-
 We will eventually be able to run this monad by giving it a list
 of inputs and it will give us back the log of `write`s.
+-}
 
 -- >>> runFakeIO echo [Nothing, Nothing, Just "Hello"]
 
+{-
 Should produce the output
 
       ["hello", "\n"]

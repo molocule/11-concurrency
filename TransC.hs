@@ -101,6 +101,7 @@ of inputs and it will give us back the log of `write`s.
 -}
 
 -- >>> runFakeIO echo [Nothing, Nothing, Just "Hello"]
+-- Prelude.undefined
 
 {-
 Should produce the output
@@ -126,7 +127,12 @@ Complete the definition of the input function so that it accesses the
 -}
 
 instance Input FakeIO where
-  input = undefined
+  input = do
+    st <- S.get
+    let oldInput = fsInput st
+    case oldInput of
+      [] -> (S.put $ st {fsInput = []}) >> return Nothing
+      x : xs -> (S.put $ st {fsInput = xs}) >> return x
 
 {-
 We can run the `FakeIO` monad by giving it an initial state.
@@ -150,6 +156,7 @@ testEcho =
     ~?= ["hello", "\n"]
 
 -- >>> runTestTT testEcho
+-- Counts {cases = 1, tried = 1, errors = 0, failures = 0}
 
 testEcho2 :: Test
 testEcho2 =
@@ -159,13 +166,18 @@ testEcho2 =
     ~?= ["hello", "\n", "CIS 552", "\n"]
 
 -- >>> runTestTT testEcho2
+-- Counts {cases = 1, tried = 1, errors = 0, failures = 0}
 
 {-
 Now write a test of your own, for a simple IO progam of your own devising.
 -}
 
 test3 :: Test
-test3 = runFakeIO undefined undefined ~?= undefined
+test3 =
+  runFakeIO
+    echo
+    [Just "Claudia", Nothing, Nothing]
+    ~?= ["Claudia", "\n"]
 
 -- >>> runTestTT test3
 
@@ -200,8 +212,9 @@ Now, make this new type a monad:
 -}
 
 instance Monad m => Monad (C m) where
-  return x = undefined
-  m >>= f = undefined
+  return x = C $ \f -> f x
+  (>>=) :: C m a -> (a -> C m b) -> C m b
+  m >>= f = C $ \k -> runC m (\v -> runC (f v) k)
 
 instance Monad m => Applicative (C m) where
   pure = return
@@ -219,12 +232,16 @@ just add them with a click, but make sure that you understand why these operatio
 have the types that they do.
 -}
 
+atom :: Functor m => m a -> C m a
 atom m = C $ \k -> Atom (fmap k m)
 
+run :: Monad m => C m b -> m ()
 run m = sched [runC m $ const Stop]
 
+fork :: C m b -> C m ()
 fork m = C $ \k -> Fork (runC m $ const Stop) (k ())
 
+sched :: Monad m => [Action m] -> m ()
 sched [] = return ()
 sched (Atom m : cs) = m >>= \a -> sched (cs ++ [a])
 sched (Fork a1 a2 : cs) = sched (cs ++ [a1, a2])
@@ -242,11 +259,29 @@ Next, show how to implement input and output for
 this new parameterized concurrency monad.
 -}
 
+-- instance Output FakeIO where
+--   write s = do
+--     st <- S.get
+--     let oldLog = fsWrite st
+--     let newLog = oldLog <> Seq.singleton s
+--     S.put $ st {fsWrite = newLog}
+
+-- instance Input FakeIO where
+--   input = do
+--     st <- S.get
+--     let oldInput = fsInput st
+--     case oldInput of
+--       [] -> (S.put $ st {fsInput = []}) >> return Nothing
+--       x : xs -> (S.put $ st {fsInput = xs}) >> return x
+
 instance Input m => Input (C m) where
-  input = undefined
+  input = lift input
 
 instance Output m => Output (C m) where
-  write = undefined
+  write = atom . write
+
+-- fork $ do
+-- return s
 
 {-
 (More generally, note that `C` is a *monad transformer*. We can make the

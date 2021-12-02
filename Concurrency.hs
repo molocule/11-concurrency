@@ -109,7 +109,10 @@ string letter by letter.
 -}
 
 writeAction :: String -> Action
-writeAction = undefined
+writeAction (c : cs) = Atom $ do
+  putChar c
+  return (writeAction cs)
+writeAction [] = Stop
 
 {-
 And this one writes two strings concurrently.
@@ -147,7 +150,14 @@ The job of the thread scheduler is to run the threads in the queue.
 -}
 
 sched :: [Action] -> IO ()
-sched = undefined
+sched (a : rest) = case a of
+  Atom io -> do
+    newAction <- io
+    sched (rest ++ [newAction])
+  Fork a1 a2 ->
+    sched (a1 : a2 : rest)
+  Stop -> sched rest
+sched [] = return ()
 
 {-
 To make sure that we get the full effect of concurrency, we'll
@@ -200,7 +210,9 @@ passing the "last action" along.
 
 writeComputation :: String -> Action -> Action
 writeComputation "" k = k
-writeComputation (c : cs) k = undefined
+writeComputation (c : cs) k = Atom $ do
+  putChar c
+  return (writeComputation cs k)
 
 {-
 For example, we can put actions together by successively passing them in
@@ -224,7 +236,7 @@ sequenceComputation ::
   (Action -> Action) ->
   (Action -> Action) ->
   (Action -> Action)
-sequenceComputation = undefined
+sequenceComputation a1 a2 = a1 . a2
 
 {-
 For example, here is the `hello552` sequence above:
@@ -268,7 +280,7 @@ that character to the next action.
 -}
 
 readComputation :: (Char -> Action) -> Action
-readComputation = undefined
+readComputation k = Atom (k <$> getChar)
 
 {-
 So, to be polymorphic over the result type of the action, we would like our
@@ -286,7 +298,7 @@ sequenceComp ::
   (a -> (b -> Action) -> Action) -> -- pass to another
   (b -> Action) ->
   Action
-sequenceComp m f = undefined
+sequenceComp m f = \k -> m (`f` k)
 
 {-
 To sequence computations, we first abstract the current continuation
@@ -340,7 +352,7 @@ result to the next one in line.
 -}
 
 returnCompM :: a -> ((a -> Action) -> Action)
-returnCompM x = undefined
+returnCompM x = \k -> k x
 
 {-
 Putting this all together, we can define a monadic type using a newtype:
@@ -382,7 +394,7 @@ interrupted; that is why this is called "atomic".)
 -}
 
 atom :: IO a -> C a
-atom = undefined
+atom m = C $ \k -> Atom $ do k <$> m
 
 {-
 For thread spawning, there are multiple possible primitives -- we'll present
@@ -434,7 +446,7 @@ over.
 -}
 
 infloop :: OutputMonad m => String -> m ()
-infloop = undefined
+infloop s = write s >> infloop s
 
 {-
 If we run this loop from the ghci toplevel (in the IO monad) we don't get
@@ -576,7 +588,11 @@ class Monad m => MVarMonad m where
 instance MVarMonad IO where
   newMVar = IO.newIORef Nothing
   writeMVar v a = IO.writeIORef v (Just a)
-  takeMVar = undefined
+  takeMVar v = do
+    r <- IO.readIORef v
+    case r of
+      Nothing -> return Nothing
+      Just a -> IO.writeIORef v Nothing >> return (Just a)
 
 {-
 We are justified in calling these MVars because all of the operations happen
@@ -595,7 +611,11 @@ operation *requires* concurrency to do anything interesting...
 -}
 
 readMVar :: (MVarMonad m) => MVar a -> m a
-readMVar = undefined
+readMVar v = do
+  ma <- takeMVar v
+  case ma of
+    Just x -> return x
+    Nothing -> readMVar v
 
 {-
 Now here is an example using an MVar to implement a simple form of
